@@ -9,9 +9,9 @@ class AppDAO {
             } else {
                 console.log('Connected to database');
             }
-        })
+        });
 
-        fs.readFile('./db/init.sql','utf8',async (err, data) => {
+        fs.readFile('./db/init.sql','utf8', (err, data) => {
             if (err){
                 console.log(err);
                 return;
@@ -19,22 +19,67 @@ class AppDAO {
                 try {
                     let dataArr = data.split(";");
                     dataArr.pop();
-                        for (const d of dataArr) {
-                            await new Promise((resolve, reject) => {
-                                this.db.run(d,(err)=>{
-                                    if (err)console.error(err);
-                                });
-                                resolve();
-                            })
-                        }
+                    for (const d of dataArr) {
+                        this.db.run(d,(err)=>{
+                            if (err)console.error(err);
+                        });
+                    }
                 }catch(err){
                     console.error(err);
                 }
             }
-        })
-
+        });
     }
 
+    createIndexes(){
+        let time=fs.readFile('./db/create_index.sql','utf8', (err, data) => {
+            if (err){
+                console.log(err);
+                return null;
+            }else{
+                time=Date.now();
+                try {
+                    let dataArr = data.split(";");
+                    dataArr.pop();
+                    for (const d of dataArr) {
+                        this.db.run(d,(err)=>{
+                            if (err)console.error(err);
+                        });
+                    }
+                }catch(err){
+                    console.error(err);
+                    return null;
+                }
+                return time;
+            }
+        });
+        return time;
+    }
+
+    dropIndexes(){
+        let time=fs.readFile('./db/create_index.sql','utf8', (err, data) => {
+            if (err){
+                console.log(err);
+                return null;
+            }else{
+                time=Date.now();
+                try {
+                    let dataArr = data.split(";");
+                    dataArr.pop();
+                    for (const d of dataArr) {
+                        this.db.run(d,(err)=>{
+                            if (err)console.error(err);
+                        });
+                    }
+                }catch(err){
+                    console.error(err);
+                    return null;
+                }
+                return time;
+            }
+        });
+        return time;
+    }
 }
 
 module.exports = AppDAO;

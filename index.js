@@ -8,16 +8,17 @@ const app = express()
 const port = 3000
 
 const crypto = require('crypto');
-db= new dao_sqlite("./db/bd_sqlite.db");
+
+const db_sqlite = new dao_sqlite("./db/bd_sqlite.db");
+const db_neo4j = new dao_neo4j();
 
 User = new user();
 Product = new product();
 
 app.get('/', (req, res) => {
-    res.sendFile(__dirname+"/index.html",err => {
+    res.status(200).sendFile(__dirname+"/index.html",err => {
         if (err){
             console.error(err);
-            return;
         }
     })
 });
@@ -35,12 +36,33 @@ app.get('/createProduct/:id/:name', async (req, res) => {
 })
 
 app.get('/insertMass',(req,res)=>{
-    insertMassData(req,res);
+    try{
+        insertMassData(req,res);
+    }catch(err){
+        res.status(500).send("Unknown error.")
+    }
+
 });
 
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
+app.get('/createindex/:db',(req, res) => {
+    try{
+        let start;
+        if (req.params.db=="sqlite"){
+            start = db_sqlite.createIndexes();
+        }else if (req.params.db=="neo4j"){
+            start = db_neo4j.createIndexes();
+        }
+        let end=Date.now();
+        res.status(201).send(timeToSec(end-start));
+    }catch(err){
+        console.error(err);
+        res.status(500).send("Unknown error.");
+    }
 })
+
+app.listen(port, () => {
+    console.log(`App listening on port ${port}`)
+});
 
 function timeToSec(time){
     return time.toFixed(3)/1000;
@@ -81,5 +103,5 @@ function insertMassData(req,res){
 
     let time={sqlite:timeToSec(insertSQLtime),neo4j:timeToSec(insertNoSQLtime)};
 
-    res.send(time);
+    res.status(201).send(time);
 }
