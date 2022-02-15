@@ -41,9 +41,42 @@ class User{
         }
     }
 
-    read(){
-
+    async read(id,res,strDb){
+        if(strDb == "SQLITE"){
+            await this.readSqlLite(id,res);
+        }
+        else if(strDb == "NEO4J"){
+            await this.readNeo4j(id);
+        }
+        else{
+            res.send("db not valid");
+        }
     }
+
+    async readSqlLite(id,res){
+        await this.dbSqlite.db.get("SELECT * FROM USERS WHERE id = "+id,(err,row)=>{
+            res.send(row);
+        });
+    }
+
+    async readNeo4j(id,res){
+        let session = this.dbNeo4j.driver.session()
+        try {
+            const result = await session.run(
+                'MATCH (a:Users {id: $id}) RETURN a',
+                {   id: id}
+            )
+
+            const singleRecord = result.records[0]
+            const node = singleRecord.get(0)
+            res.send(node);
+        } finally {
+            await session.close()
+        }
+// on application exit:
+        await this.dbNeo4j.driver.close()
+    }
+
 }
 
 module.exports = User ;

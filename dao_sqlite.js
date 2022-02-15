@@ -14,9 +14,14 @@ class AppDAO {
     }
 
     test(){
-        this.db.get("select * from USER",(err,res)=>{
+        let res ;
+        res = this.db.get("select * from USER",(err,res)=>{
             console.log(res);
+            return res ;
+
         });
+        console.log(res);
+        return res ;
 
     }
 }

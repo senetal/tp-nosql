@@ -30,6 +30,10 @@ app.get('/createProduct/:id/:name', async (req, res) => {
     console.log(req.query.db);
 })
 
+app.get('/User/:id', async (req, res) => {
+    let result = await User.read(req.params.id,res,req.query.db);
+})
+
 app.get('/insertMass',(req,res)=>{
     insertMassData(req,res);
 });
