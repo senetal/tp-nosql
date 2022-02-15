@@ -9,9 +9,13 @@ const crypto = require('crypto');
 db= new dao_sqlite("./db/bd_sqlite.db");
 
 app.get('/', (req, res) => {
-    res.send('Hello World!')
-    db.test();
-})
+    res.sendFile(__dirname+"/index.html",err => {
+        if (err){
+            console.error(err);
+            return;
+        }
+    })
+});
 
 app.get('/insertMass',(req,res)=>{
     insertMassData(req,res);
