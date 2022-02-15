@@ -19,6 +19,6 @@
   "dependencies": {
     "express": "^4.17.2",
     "neo4j-driver": "^4.4.2",
-    "sqlite": "^4.0.23"
+    "sqlite3": "^5.0.2"
   }
 }
