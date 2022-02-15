@@ -6,7 +6,7 @@ const port = 3000
 
 const crypto = require('crypto');
 
-db= new dao_sqlite("./bd_sqlite.db");
+db= new dao_sqlite("./db/bd_sqlite.db");
 
 app.get('/', (req, res) => {
     res.send('Hello World!')
