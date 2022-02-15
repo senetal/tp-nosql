@@ -30,5 +30,3 @@ async function toto() {
     await driver.close()
 
 }
-
-toto();

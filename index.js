@@ -1,9 +1,10 @@
 const express = require('express');
-const neo4j = require('neo4j-driver');
 const dao_sqlite = require('./dao_sqlite.js');
-const config = require('./config.json');
+const dao_neo4j = require('./dao_neo4j.js');
 const app = express()
 const port = 3000
+
+const crypto = require('crypto');
 
 db= new dao_sqlite("./bd_sqlite.db");
 
@@ -12,33 +13,52 @@ app.get('/', (req, res) => {
     db.test();
 })
 
+app.get('/insertMass',(req,res)=>{
+    insertMassData(req,res);
+});
+
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
 
-const driver = neo4j.driver(config.BD_URL, neo4j.auth.basic(config.BD_USER, config.BD_PWD))
-const session = driver.session()
-const personName = 'Alice'
-
-async function toto() {
-
-    try {
-        const result = await session.run(
-            'CREATE (a:Person {name: $name}) RETURN a',
-            {name: personName}
-        )
-
-        const singleRecord = result.records[0]
-        const node = singleRecord.get(0)
-
-        console.log(node.properties.name)
-    } finally {
-        await session.close()
-    }
-
-// on application exit:
-    await driver.close()
-
+function timeToSec(time){
+    return time.toFixed(3)/1000;
 }
 
-toto();
+function insertMassData(req,res){
+    let users = [];
+    let products = [];
+    let follows = [];
+    let buy = [];
+
+    for (let i = 0; i < 1000000; i++) {
+        users.push(crypto.randomBytes(20).toString('hex'));
+    }
+
+    for (let i = 0; i < 10000; i++) {
+        products.push(crypto.randomBytes(10).toString('hex'));
+    }
+
+    for (let i = 0; i < users.length; i++) {
+        let followers = Math.floor(Math.random()*21);
+        for (let j = 0; j < followers; j++) {
+            let userid = Math.floor(Math.random()*1000000);
+            if (userid==i)userid=0;
+            follows.push({user1_id:i,user2_id:userid});
+        }
+        let bought = Math.floor(Math.random()*6);
+        for (let j = 0; j < bought; j++) {
+            let productid = Math.floor(Math.random()*10000);
+            buy.push({userid:i,productid:productid});
+        }
+    }
+
+    let start = Date.now()
+    let insertSQLtime = Date.now()-start;
+    start = Date.now();
+    let insertNoSQLtime = Date.now()-start;
+
+    let time={sqlite:timeToSec(insertSQLtime),neo4j:timeToSec(insertNoSQLtime)};
+
+    res.send(time);
+}
