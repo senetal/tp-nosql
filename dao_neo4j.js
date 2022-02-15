@@ -3,8 +3,8 @@ const config = require('./config.json');
 
 class Dao_Neo4j{
     constructor() {
-        const driver = neo4j.driver(config.BD_URL, neo4j.auth.basic(config.BD_USER, config.BD_PWD))
-        this.session = driver.session()
+        this.driver = neo4j.driver(config.BD_URL, neo4j.auth.basic(config.BD_USER, config.BD_PWD))
+        this.session = this.driver.session()
     }
 }
 
@@ -30,5 +30,3 @@ async function toto() {
     await driver.close()
 
 }
-
-toto();

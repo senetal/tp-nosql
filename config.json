@@ -1,5 +1,5 @@
 {
-  "BD_URL": "",
-  "BD_USER": "",
-  "BD_PWD": ""
+  "BD_URL": "neo4j://localhost:7687",
+  "BD_USER": "neo4j",
+  "BD_PWD": "06111998"
 }
