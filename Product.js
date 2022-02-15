@@ -3,21 +3,22 @@ const dao_neo4j = require('./dao_neo4j');
 const config = require('./config.json');
 
 
-class User{
+class Product {
     constructor() {
         this.dbSqlite = new dao_sqlite("./db/bd_sqlite.db");
         this.dbNeo4j = new dao_neo4j();
     }
 
-    async createSqLite(id, pseudo){
-        this.dbSqlite.db.run("INSERT INTO USERS (id,pseudo) VALUES("+id+", '"+pseudo+"')");
+    async createSqLite(id, name){
+        this.dbSqlite.db.run("INSERT INTO PRODUCT (id,name) VALUES("+id+", '"+name+"')");
     }
-    async createNeo4j(id,pseudo){
+
+    async createNeo4j(id,name){
         try {
             const result = await this.dbNeo4j.session.run(
-                'CREATE (a:Users {id: $id, pseudo: $pseudo}) RETURN a',
+                'CREATE (a:Product {id: $id, name: $name}) RETURN a',
                 {   id: id,
-                    pseudo: pseudo}
+                    name: name}
             )
 
             const singleRecord = result.records[0]
@@ -31,20 +32,16 @@ class User{
         await this.dbNeo4j.driver.close()
     }
 
-
-    async create(id, pseudo, strDb) {
+    async create(id, name, strDb) {
         if(strDb == "SQLITE" || strDb == null){
-            await this.createSqLite(id,pseudo);
+            await this.createSqLite(id,name);
         }
         if(strDb == "NEO4J" || strDb == null){
-            await this.createNeo4j(id,pseudo);
+            await this.createNeo4j(id,name);
         }
     }
 
-    read(){
 
-    }
 }
 
-module.exports = User ;
-
+module.exports = Product ;

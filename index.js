@@ -2,6 +2,7 @@ const express = require('express');
 const dao_sqlite = require('./dao_sqlite.js');
 const config = require('./config.json');
 const user = require('./User');
+const product = require('./Product');
 const dao_neo4j = require('./dao_neo4j.js');
 const app = express()
 const port = 3000
@@ -10,15 +11,22 @@ const crypto = require('crypto');
 db= new dao_sqlite("./db/bd_sqlite.db");
 
 User = new user();
+Product = new product();
 
 app.get('/', (req, res) => {
     res.send('Hello World!')
     db.test();
 })
 
-app.get('/createUser/:id/:name', async (req, res) => {
-    await User.create(req.params.id, req.params.name,req.query.db);
+app.get('/createUser/:id/:pseudo', async (req, res) => {
+    await User.create(req.params.id, req.params.pseudo,req.query.db);
     res.send('Utilisateur créé');
+    console.log(req.query.db);
+})
+
+app.get('/createProduct/:id/:name', async (req, res) => {
+    await Product.create(req.params.id, req.params.name,req.query.db);
+    res.send('Produit créé');
     console.log(req.query.db);
 })
 
