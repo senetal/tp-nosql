@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/senetal/tp-nosql#readme",
   "dependencies": {
+    "crypto": "^1.0.1",
     "express": "^4.17.2",
     "neo4j-driver": "^4.4.2",
     "sqlite3": "^5.0.2"
