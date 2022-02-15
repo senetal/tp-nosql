@@ -1,0 +1,24 @@
+{
+  "name": "tp-nosql",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/senetal/tp-nosql.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/senetal/tp-nosql/issues"
+  },
+  "homepage": "https://github.com/senetal/tp-nosql#readme",
+  "dependencies": {
+    "express": "^4.17.2",
+    "neo4j-driver": "^4.4.2",
+    "sqlite": "^4.0.23"
+  }
+}
