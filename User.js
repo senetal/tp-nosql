@@ -5,7 +5,7 @@ const config = require('./config.json');
 
 class User{
     constructor() {
-        this.dbSqlite = new dao_sqlite("./bd_sqlite.db");
+        this.dbSqlite = new dao_sqlite("./db/bd_sqlite.db");
         this.dbNeo4j = new dao_neo4j();
     }
 
