@@ -39,26 +39,46 @@ app.get('/insertMass',(req,res)=>{
     try{
         insertMassData(req,res);
     }catch(err){
-        res.status(500).send("Unknown error.")
+        res.send("Unknown error.")
     }
 
 });
 
-app.get('/createindex/:db',(req, res) => {
+app.get('/createindex',(req, res) => {
     try{
         let start;
-        if (req.params.db=="sqlite"){
+        if (req.query.db=="sqlite"){
             start = db_sqlite.createIndexes();
-        }else if (req.params.db=="neo4j"){
+        }else if (req.query.db=="neo4j"){
             start = db_neo4j.createIndexes();
+        }else{
+            res.send("Veuillez préciser la db (sqlite/neo4j)")
         }
         let end=Date.now();
-        res.status(201).send(timeToSec(end-start));
+        res.send(""+timeToSec(end-start));
     }catch(err){
         console.error(err);
-        res.status(500).send("Unknown error.");
+        res.send("Unknown error.");
     }
-})
+});
+
+app.get('/dropindex',(req, res) => {
+    try{
+        let start;
+        if (req.query.db=="sqlite"){
+            start = db_sqlite.dropIndexes();
+        }else if (req.query.db=="neo4j"){
+            start = db_neo4j.dropIndexes();
+        }else{
+            res.send("Veuillez préciser la db (sqlite/neo4j)")
+        }
+        let end=Date.now();
+        res.send(""+timeToSec(end-start));
+    }catch(err){
+        console.error(err);
+        res.send("Unknown error.");
+    }
+});
 
 app.listen(port, () => {
     console.log(`App listening on port ${port}`)
@@ -103,5 +123,5 @@ function insertMassData(req,res){
 
     let time={sqlite:timeToSec(insertSQLtime),neo4j:timeToSec(insertNoSQLtime)};
 
-    res.status(201).send(time);
+    res.send(time);
 }

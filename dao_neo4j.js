@@ -7,24 +7,23 @@ class Dao_Neo4j{
         this.session = this.driver.session()
     }
 
-    async createIndexes(){
+    createIndexes(){
         let time=Date.now();
-        await this.session.run("CREATE INDEX IF NOT EXISTS" +
-            "FOR (n:USER)" +
+        this.session.run("CREATE INDEX IF NOT EXISTS " +
+            "FOR (n:USER) " +
             "ON (n.pseudo)");
-        await this.session.run("CREATE INDEX IF NOT EXISTS" +
-            "FOR (n:PRODUCT)" +
+        this.session.run("CREATE INDEX IF NOT EXISTS " +
+            "FOR (n:PRODUCT) " +
             "ON (n.name)");
         return time;
     }
 
-    async dropIndexes(){
+    dropIndexes(){
         let time=Date.now();
-        await this.session.run("DROP INDEX ON :USER(pseudo)");
-        await this.session.run("DROP INDEX ON :USER(pseudo)");
+        this.session.run("DROP INDEX IF EXISTS ON :USER(pseudo)");
+        this.session.run("DROP INDEX IF EXISTS ON :USER(pseudo)");
         return time;
     }
-
 }
 
 module.exports = Dao_Neo4j

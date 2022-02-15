@@ -1,2 +1,2 @@
-DROP INDEX "pseudo_idx";
-DROP INDEX "product_idx";
+DROP INDEX IF EXISTS "pseudo_idx";
+DROP INDEX IF EXISTS "product_idx";
