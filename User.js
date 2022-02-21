@@ -33,20 +33,21 @@ class User{
 
 
     async create(id, pseudo, strDb) {
-        if(strDb == "SQLITE" || strDb == null){
+        if(strDb.toUpperCase() == "SQLITE" || strDb == null){
             await this.createSqLite(id,pseudo);
         }
-        if(strDb == "NEO4J" || strDb == null){
+        if(strDb.toUpperCase() == "NEO4J" || strDb == null){
             await this.createNeo4j(id,pseudo);
         }
     }
 
     async read(id,res,strDb){
-        if(strDb == "SQLITE"){
+        if(strDb.toUpperCase() == "SQLITE"){
             await this.readSqlLite(id,res);
         }
-        else if(strDb == "NEO4J"){
-            await this.readNeo4j(id);
+        else if(strDb.toUpperCase() == "NEO4J"){
+           var r =  await this.readNeo4j(id);
+           res.send(r);
         }
         else{
             res.send("db not valid");
@@ -69,7 +70,7 @@ class User{
 
             const singleRecord = result.records[0]
             const node = singleRecord.get(0)
-            res.send(node);
+            return node ;
         } finally {
             await session.close()
         }
