@@ -58,6 +58,11 @@ app.get('/deleteUser/:id', async (req, res) => {
     res.send("suppression effectuée")
 })
 
+app.get('/deleteProduct/:id', async (req, res) => {
+    await Product.delete(req.params.id,req.query.db);
+    res.send("suppression effectuée")
+})
+
 app.get('/insertMass',(req,res)=>{
     try{
         insertMassData(req,res);
