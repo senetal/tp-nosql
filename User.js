@@ -33,21 +33,22 @@ class User{
 
 
     async create(id, pseudo, strDb) {
-        if(strDb.toUpperCase() == "SQLITE" || strDb == null){
+        if(strDb == null || strDb.toUpperCase() == "SQLITE"){
             await this.createSqLite(id,pseudo);
         }
-        if(strDb.toUpperCase() == "NEO4J" || strDb == null){
+        if(strDb == null  || strDb.toUpperCase() == "NEO4J" ){
             await this.createNeo4j(id,pseudo);
         }
     }
 
     async read(id,res,strDb){
-        if(strDb.toUpperCase() == "SQLITE"){
-            await this.readSqlLite(id,res);
-        }
-        else if(strDb.toUpperCase() == "NEO4J"){
-           var r =  await this.readNeo4j(id);
-           res.send(r);
+        if(strDb != null) {
+            if (strDb.toUpperCase() == "SQLITE") {
+                await this.readSqlLite(id, res);
+            } else if (strDb.toUpperCase() == "NEO4J") {
+                var r = await this.readNeo4j(id);
+                res.send(r);
+            }
         }
         else{
             res.send("db not valid");
@@ -77,6 +78,7 @@ class User{
 // on application exit:
         await this.dbNeo4j.driver.close()
     }
+
 
 }
 

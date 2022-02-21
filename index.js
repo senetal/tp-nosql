@@ -39,6 +39,10 @@ app.get('/User/:id', async (req, res) => {
     let result = await User.read(req.params.id,res,req.query.db);
 })
 
+app.get('/Product/:id', async (req, res) => {
+    let result = await Product.read(req.params.id,res,req.query.db);
+})
+
 app.get('/insertMass',(req,res)=>{
     try{
         insertMassData(req,res);

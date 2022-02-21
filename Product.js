@@ -33,15 +33,52 @@ class Product {
     }
 
     async create(id, name, strDb) {
-        if(strDb == "SQLITE" || strDb == null){
+        if(strDb == null || strDb.toUpperCase() == "SQLITE"){
             await this.createSqLite(id,name);
         }
-        if(strDb == "NEO4J" || strDb == null){
+        if(strDb == null  || strDb.toUpperCase() == "NEO4J" ){
             await this.createNeo4j(id,name);
         }
     }
 
+    async read(id,res,strDb){
+        if(strDb.toUpperCase() == "SQLITE"){
+            await this.readSqlLite(id,res);
+        }
+        else if(strDb.toUpperCase() == "NEO4J"){
+            var r =  await this.readNeo4j(id);
+            res.send(r);
+        }
+        else{
+            res.send("db not valid");
+        }
+    }
 
+    async readSqlLite(id,res){
+        await this.dbSqlite.db.get("SELECT * FROM PRODUCT WHERE id = "+id,(err,row)=>{
+            res.send(row);
+        });
+    }
+
+    async readNeo4j(id,res){
+        let session = this.dbNeo4j.driver.session()
+        try {
+            const result = await session.run(
+                'MATCH (a:Product {id: $id}) RETURN a',
+                {   id: id}
+            )
+
+            const singleRecord = result.records[0]
+            const node = singleRecord.get(0)
+            return node ;
+        } finally {
+            await session.close()
+        }
+// on application exit:
+        await this.dbNeo4j.driver.close()
+    }
 }
+
+
 
 module.exports = Product ;
