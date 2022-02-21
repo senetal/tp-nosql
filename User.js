@@ -79,6 +79,38 @@ class User{
         await this.dbNeo4j.driver.close()
     }
 
+    updateSqlite(id,name){
+        this.dbSqlite.db.run("UPDATE USERS Set pseudo = '"+name+"' WHERE id = "+id);
+    }
+
+    async updateNeo4j(id,pseudo){
+        let session = this.dbNeo4j.driver.session()
+        try {
+            const result = await session.run(
+                'MATCH (a:Users {id: $id}) set a.pseudo = $pseudo RETURN a',
+                {   id: id,
+                            pseudo: pseudo}
+            )
+
+            const singleRecord = result.records[0]
+            const node = singleRecord.get(0)
+        } finally {
+            await this.dbNeo4j.session.close()
+        }
+// on application exit:
+        await this.dbNeo4j.driver.close()
+    }
+
+    async update(id,pseudo,strDb){
+            if (strDb == null || strDb.toUpperCase() == "SQLITE") {
+                this.updateSqlite(id, pseudo);
+            }
+            if (strDb == null || strDb.toUpperCase() == "NEO4J") {
+                await this.updateNeo4j(id,pseudo);
+            }
+    }
+
+
 
 }
 
