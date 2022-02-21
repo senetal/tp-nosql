@@ -1,4 +1,5 @@
 const sqlite = require('sqlite3');
+const fs = require('fs');
 
 class AppDAO {
     constructor(dbFilePath) {
@@ -8,21 +9,62 @@ class AppDAO {
             } else {
                 console.log('Connected to database');
             }
-        })
+        });
 
-
+        fs.readFile('./db/init.sql','utf8', (err, data) => {
+            if (err){
+                console.log(err);
+                return;
+            }else{
+                try {
+                    let dataArr = data.split(";");
+                    dataArr.pop();
+                    for (const d of dataArr) {
+                        this.db.run(d,(err)=>{
+                            if (err)console.error(err);
+                        });
+                    }
+                }catch(err){
+                    console.error(err);
+                }
+            }
+        });
     }
 
-    test(){
-        let res ;
-        res = this.db.get("select * from USER",(err,res)=>{
-            console.log(res);
-            return res ;
+    createIndexes(){
+        let data=fs.readFileSync('./db/create_index.sql','utf8')
+        let time=Date.now();
+        try {
+            let dataArr = data.split(";");
+            dataArr.pop();
+            for (const d of dataArr) {
+                this.db.run(d,(err)=>{
+                    if (err)console.error(err);
+                });
+            }
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return time;
+    }
 
-        });
-        console.log(res);
-        return res ;
-
+    dropIndexes(){
+        let data=fs.readFileSync('./db/drop_index.sql','utf8')
+        let time=Date.now();
+        try {
+            let dataArr = data.split(";");
+            dataArr.pop();
+            for (const d of dataArr) {
+                this.db.run(d,(err)=>{
+                    if (err)console.error(err);
+                });
+            }
+        }catch(err){
+            console.error(err);
+            return null;
+        }
+        return time;
     }
 }
 

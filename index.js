@@ -8,15 +8,20 @@ const app = express()
 const port = 3000
 
 const crypto = require('crypto');
-db= new dao_sqlite("./db/bd_sqlite.db");
+
+const db_sqlite = new dao_sqlite("./db/bd_sqlite.db");
+const db_neo4j = new dao_neo4j();
 
 User = new user();
 Product = new product();
 
 app.get('/', (req, res) => {
-    res.send('Hello World!')
-    db.test();
-})
+    res.status(200).sendFile(__dirname+"/index.html",err => {
+        if (err){
+            console.error(err);
+        }
+    })
+});
 
 app.get('/createUser/:id/:pseudo', async (req, res) => {
     await User.create(req.params.id, req.params.pseudo,req.query.db);
@@ -35,12 +40,53 @@ app.get('/User/:id', async (req, res) => {
 })
 
 app.get('/insertMass',(req,res)=>{
-    insertMassData(req,res);
+    try{
+        insertMassData(req,res);
+    }catch(err){
+        res.send("Unknown error.")
+    }
+
+});
+
+app.get('/createindex',(req, res) => {
+    try{
+        let start;
+        if (req.query.db=="sqlite"){
+            start = db_sqlite.createIndexes();
+        }else if (req.query.db=="neo4j"){
+            start = db_neo4j.createIndexes();
+        }else{
+            res.send("Veuillez préciser la db (sqlite/neo4j)")
+        }
+        let end=Date.now();
+        res.send(""+timeToSec(end-start));
+    }catch(err){
+        console.error(err);
+        res.send("Unknown error.");
+    }
+});
+
+app.get('/dropindex',(req, res) => {
+    try{
+        let start;
+        if (req.query.db=="sqlite"){
+            start = db_sqlite.dropIndexes();
+        }else if (req.query.db=="neo4j"){
+            start = db_neo4j.dropIndexes();
+        }else{
+            res.send("Veuillez préciser la db (sqlite/neo4j)")
+        }
+        let end=Date.now();
+        res.send(""+timeToSec(end-start));
+    }catch(err){
+        console.error(err);
+        res.send("Unknown error.");
+    }
 });
 
 app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
-})
+    console.log(`App listening on port ${port}`)
+});
 
 function timeToSec(time){
     return time.toFixed(3)/1000;

@@ -2,3 +2,5 @@ node_modules
 .idea
 config.json
 db/bd_sqlite.db
+
+db/bd_sqlite.db-journal
