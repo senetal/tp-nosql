@@ -110,6 +110,32 @@ class User{
             }
     }
 
+    deleteSqlite(id){
+        this.dbSqlite.db.run("DELETE FROM USERS WHERE id = "+id);
+    }
+
+    async deleteNeo4j(id){
+
+        let session = this.dbNeo4j.driver.session()
+        try {
+            const result = await session.run(
+                'MATCH (a:Users {id: $id}) DELETE a',
+                {   id: id}
+            )
+        } finally {
+            await this.dbNeo4j.session.close()
+        }
+    }
+
+    async delete(id,strDb){
+        if (strDb == null || strDb.toUpperCase() == "SQLITE") {
+            this.deleteSqlite(id);
+        }
+        if (strDb == null || strDb.toUpperCase() == "NEO4J") {
+            await this.deleteNeo4j(id);
+        }
+    }
+
 
 
 }
