@@ -31,7 +31,7 @@ class AppDAO {
         });
     }
 
-    createIndexes(){
+    async createIndexes(){
         let data=fs.readFileSync('./db/create_index.sql','utf8')
         let time=Date.now();
         try {
@@ -49,7 +49,7 @@ class AppDAO {
         return time;
     }
 
-    dropIndexes(){
+    async dropIndexes(){
         let data=fs.readFileSync('./db/drop_index.sql','utf8')
         let time=Date.now();
         try {

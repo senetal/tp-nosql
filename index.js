@@ -4,6 +4,7 @@ const config = require('./config.json');
 const user = require('./User');
 const product = require('./Product');
 const dao_neo4j = require('./dao_neo4j.js');
+const fs = require('fs');
 const app = express()
 const port = 3000
 
@@ -12,8 +13,8 @@ const crypto = require('crypto');
 const db_sqlite = new dao_sqlite("./db/bd_sqlite.db");
 const db_neo4j = new dao_neo4j();
 
-User = new user();
-Product = new product();
+User = new user(db_sqlite,db_neo4j);
+Product = new product(db_sqlite,db_neo4j);
 
 app.get('/', (req, res) => {
     res.status(200).sendFile(__dirname+"/index.html",err => {
@@ -44,13 +45,13 @@ app.get('/insertMass',(req,res)=>{
 
 });
 
-app.get('/createindex',(req, res) => {
+app.get('/createindex', async (req, res) => {
     try{
         let start;
-        if (req.query.db=="sqlite"){
-            start = db_sqlite.createIndexes();
-        }else if (req.query.db=="neo4j"){
-            start = db_neo4j.createIndexes();
+        if (req.query.db.toLowerCase()=="sqlite"){
+            start = await db_sqlite.createIndexes();
+        }else if (req.query.db.toLowerCase()=="neo4j"){
+            start = await db_neo4j.createIndexes();
         }else{
             res.send("Veuillez préciser la db (sqlite/neo4j)")
         }
@@ -62,13 +63,13 @@ app.get('/createindex',(req, res) => {
     }
 });
 
-app.get('/dropindex',(req, res) => {
+app.get('/dropindex',async (req, res) => {
     try{
         let start;
-        if (req.query.db=="sqlite"){
-            start = db_sqlite.dropIndexes();
-        }else if (req.query.db=="neo4j"){
-            start = db_neo4j.dropIndexes();
+        if (req.query.db.toLowerCase()=="sqlite"){
+            start = await db_sqlite.dropIndexes();
+        }else if (req.query.db.toLowerCase()=="neo4j"){
+            start = await db_neo4j.dropIndexes();
         }else{
             res.send("Veuillez préciser la db (sqlite/neo4j)")
         }
@@ -88,7 +89,7 @@ function timeToSec(time){
     return time.toFixed(3)/1000;
 }
 
-function insertMassData(req,res){
+async function insertMassData(req,res){
     let users = [];
     let products = [];
     let follows = [];
@@ -116,12 +117,35 @@ function insertMassData(req,res){
         }
     }
 
+    console.log("start")
+    //sqlite
     let start = Date.now()
+    // for (let i = 0; i < users.length; i++) {
+    //     await User.create(i,users[i],"sqlite");
+    // }
+    for (let i = 0; i < products.length; i++) {
+        await Product.create(i,products[i],"sqlite");
+    }
     let insertSQLtime = Date.now()-start;
+    console.log("on change")
+    //neo4j
     start = Date.now();
+    // for (let i = 0; i < users.length; i++) {
+    //     await User.create(i,users[i],"neo4j");
+    // }
+    /*let txt="Id,Name"
+    for (let i = 0; i < products.length; i++) {
+        txt+="\n"+i+","+products[i];
+    }
+    fs.writeFileSync("import/insert.csv",txt,'utf8');*/
+    await Product.massInsert(products)
+    /*for (let i = 0; i < products.length; i++) {
+        await Product.create(i,products[i],"neo4j");
+        console.log(i)
+    }*/
     let insertNoSQLtime = Date.now()-start;
 
     let time={sqlite:timeToSec(insertSQLtime),neo4j:timeToSec(insertNoSQLtime)};
-
+    console.log(time)
     res.send(time);
 }

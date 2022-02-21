@@ -1,12 +1,8 @@
-const dao_sqlite = require('./dao_sqlite');
-const dao_neo4j = require('./dao_neo4j');
-const config = require('./config.json');
-
-
+const fs = require('fs')
 class Product {
-    constructor() {
-        this.dbSqlite = new dao_sqlite("./db/bd_sqlite.db");
-        this.dbNeo4j = new dao_neo4j();
+    constructor(dbSqlite, dbNeo4j) {
+        this.dbSqlite = dbSqlite;
+        this.dbNeo4j = dbNeo4j;
     }
 
     async createSqLite(id, name){
@@ -14,29 +10,55 @@ class Product {
     }
 
     async createNeo4j(id,name){
+        let session = this.dbNeo4j.driver.session();
+        const txc=session.beginTransaction();
         try {
-            const result = await this.dbNeo4j.session.run(
+            const result = await txc.run(
                 'CREATE (a:Product {id: $id, name: $name}) RETURN a',
-                {   id: id,
-                    name: name}
+                {
+                    id: id,
+                    name: name
+                }
             )
 
             const singleRecord = result.records[0]
             const node = singleRecord.get(0)
+            console.log(node)
+            await txc.commit();
 
-            console.log(node.properties.pseudo)
-        } finally {
-            await this.dbNeo4j.session.close()
+        }catch (err){
+            console.error(err);
         }
-// on application exit:
-        await this.dbNeo4j.driver.close()
+        await session.close();
+    }
+
+    async massInsert(products){
+        let session = this.dbNeo4j.driver.session();
+        // session.run("LOAD CSV WITH HEADERS FROM 'file:///insert.csv' AS row" +
+        //     "MERGE (p:Product {id:row.id,name:row.name})");
+        let i_limit=10;
+        let j_limit=10000/i_limit;
+        let txt=""
+        for (let i = 0; i < i_limit; i++) {
+            let txc=session.beginTransaction();
+            for (let j = j_limit*i; j < j_limit*(i+1); j++) {
+                await txc.run(
+                    'CREATE (a:Product {id: 1})'
+                );
+                txt+="CREATE (a:Product {id: 1})\n"
+                console.log(j)
+            }
+            fs.writeFileSync("toto.txt",txt,"utf8")
+            await txc.commit();
+        }
+        await session.close();
     }
 
     async create(id, name, strDb) {
-        if(strDb == "SQLITE" || strDb == null){
+        if(strDb.toUpperCase() == "SQLITE" || strDb == null){
             await this.createSqLite(id,name);
         }
-        if(strDb == "NEO4J" || strDb == null){
+        if(strDb.toUpperCase() == "NEO4J" || strDb == null){
             await this.createNeo4j(id,name);
         }
     }
