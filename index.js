@@ -48,6 +48,11 @@ app.get('/UpdateUser/:id/:pseudo', async (req, res) => {
     res.send("modification effectuée");
 })
 
+app.get('/UpdateProduct/:id/:pseudo', async (req, res) => {
+    let result = await Product.update(req.params.id,req.params.pseudo,req.query.db);
+    res.send("modification effectuée");
+})
+
 app.get('/insertMass',(req,res)=>{
     try{
         insertMassData(req,res);
