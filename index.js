@@ -4,16 +4,25 @@ const config = require('./config.json');
 const user = require('./User');
 const product = require('./Product');
 const dao_neo4j = require('./dao_neo4j.js');
+const fs = require('fs');
+const crypto = require('crypto');
+const buy = require("./Buy");
+const follow=require("./Follow");
+const {flatten} = require("express/lib/utils");
+const Console = require("console");
 const app = express()
 const port = 3000
-
-const crypto = require('crypto');
 
 const db_sqlite = new dao_sqlite("./db/bd_sqlite.db");
 const db_neo4j = new dao_neo4j();
 
-User = new user();
-Product = new product();
+let isInserting = false;
+let minId=0;
+
+let User = new user(db_sqlite,db_neo4j);
+let Product = new product(db_sqlite,db_neo4j);
+let Buy = new buy(db_sqlite,db_neo4j);
+let Follow = new follow(db_sqlite,db_neo4j);
 
 app.get('/', (req, res) => {
     res.status(200).sendFile(__dirname+"/index.html",err => {
@@ -65,20 +74,20 @@ app.get('/deleteProduct/:id', async (req, res) => {
 
 app.get('/insertMass',(req,res)=>{
     try{
-        insertMassData(req,res);
+        if(!isInserting) insertMassData(req,res);
     }catch(err){
         res.send("Unknown error.")
     }
 
 });
 
-app.get('/createindex',(req, res) => {
+app.get('/createindex', async (req, res) => {
     try{
         let start;
-        if (req.query.db=="sqlite"){
-            start = db_sqlite.createIndexes();
-        }else if (req.query.db=="neo4j"){
-            start = db_neo4j.createIndexes();
+        if (req.query.db.toLowerCase()=="sqlite"){
+            start = await db_sqlite.createIndexes();
+        }else if (req.query.db.toLowerCase()=="neo4j"){
+            start = await db_neo4j.createIndexes();
         }else{
             res.send("Veuillez préciser la db (sqlite/neo4j)")
         }
@@ -90,13 +99,13 @@ app.get('/createindex',(req, res) => {
     }
 });
 
-app.get('/dropindex',(req, res) => {
+app.get('/dropindex',async (req, res) => {
     try{
         let start;
-        if (req.query.db=="sqlite"){
-            start = db_sqlite.dropIndexes();
-        }else if (req.query.db=="neo4j"){
-            start = db_neo4j.dropIndexes();
+        if (req.query.db.toLowerCase()=="sqlite"){
+            start = await db_sqlite.dropIndexes();
+        }else if (req.query.db.toLowerCase()=="neo4j"){
+            start = await db_neo4j.dropIndexes();
         }else{
             res.send("Veuillez préciser la db (sqlite/neo4j)")
         }
@@ -116,40 +125,60 @@ function timeToSec(time){
     return time.toFixed(3)/1000;
 }
 
-function insertMassData(req,res){
+async function insertMassData(req,res){
+    isInserting=true;
+    console.log("Start data generation");
+    let start = Date.now()
     let users = [];
     let products = [];
-    let follows = [];
-    let buy = [];
 
-    for (let i = 0; i < 1000000; i++) {
-        users.push(crypto.randomBytes(20).toString('hex'));
-    }
-
-    for (let i = 0; i < 10000; i++) {
+    for (let i = minId; i < minId+10000; i++) {
         products.push(crypto.randomBytes(10).toString('hex'));
     }
 
-    for (let i = 0; i < users.length; i++) {
-        let followers = Math.floor(Math.random()*21);
-        for (let j = 0; j < followers; j++) {
-            let userid = Math.floor(Math.random()*1000000);
-            if (userid==i)userid=0;
-            follows.push({user1_id:i,user2_id:userid});
+    for (let i = minId; i < minId+1000000; i++) {
+        users.push({pseudo:crypto.randomBytes(20).toString('hex'),buys:[],follows:[]});
+        //followers
+        if (i>25){
+            let followers = Math.min(Math.floor(Math.random()*21),users.length);
+            for (let j = 0; j < followers; j++) {
+                let userid = Math.floor(Math.random()*users.length);
+                while (users[i].follows.includes(userid) || userid==i)userid=Math.floor(Math.random()*users.length);;
+                users[i].follows.push(userid);
+            }
         }
+        //buys
         let bought = Math.floor(Math.random()*6);
         for (let j = 0; j < bought; j++) {
-            let productid = Math.floor(Math.random()*10000);
-            buy.push({userid:i,productid:productid});
+            let productid = Math.floor(Math.random()*products.length);
+            users[i].buys.push(productid);
         }
     }
 
-    let start = Date.now()
+    let genTime=Date.now()-start
+
+    console.log("Start SQL insert")
+    //sqlite
+    start = Date.now()
+    console.log("product")
+    await Product.massInsertSqlite(products);
+    console.log("user")
+    await User.massInsertSqlite(users);
+    console.log("buy")
+    await Buy.massInsertSqlite(users);
+    console.log("follow")
+    await Follow.massInsertSqlite(users);
     let insertSQLtime = Date.now()-start;
+    console.log(insertSQLtime.toFixed(3)/1000)
+    console.log("Start NoSQL insert")
+    //neo4j
     start = Date.now();
+    await Product.massInsertNeo4j(products)
+    await User.massInsertNeo4j(users)
     let insertNoSQLtime = Date.now()-start;
-
-    let time={sqlite:timeToSec(insertSQLtime),neo4j:timeToSec(insertNoSQLtime)};
-
+    console.log("Sending times")
+    let time={gen:timeToSec(genTime),sqlite:timeToSec(insertSQLtime),neo4j:timeToSec(insertNoSQLtime)};
     res.send(time);
+    minId+=1000000;
+    isInserting=false;
 }

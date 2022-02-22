@@ -1,45 +1,66 @@
-const dao_sqlite = require('./dao_sqlite');
-const dao_neo4j = require('./dao_neo4j');
-const config = require('./config.json');
-
-
 class Product {
-    constructor() {
-        this.dbSqlite = new dao_sqlite("./db/bd_sqlite.db");
-        this.dbNeo4j = new dao_neo4j();
+    constructor(dbSqlite, dbNeo4j) {
+        this.dbSqlite = dbSqlite;
+        this.dbNeo4j = dbNeo4j;
     }
 
     async createSqLite(id, name) {
         this.dbSqlite.db.run("INSERT INTO PRODUCT (id,name) VALUES(" + id + ", '" + name + "')");
     }
 
-    async createNeo4j(id, name) {
+    async createNeo4j(id,name){
+        let session = this.dbNeo4j.driver.session();
+        const txc=session.beginTransaction();
         try {
-            const result = await this.dbNeo4j.session.run(
+            await txc.run(
                 'CREATE (a:Product {id: $id, name: $name}) RETURN a',
                 {
                     id: id,
                     name: name
                 }
             )
+            await txc.commit();
 
-            const singleRecord = result.records[0]
-            const node = singleRecord.get(0)
-
-            console.log(node.properties.pseudo)
-        } finally {
-            await this.dbNeo4j.session.close()
+        }catch (err){
+            console.error(err);
         }
-// on application exit:
-        await this.dbNeo4j.driver.close()
+        await session.close();
+    }
+
+    async massInsertSqlite(products){
+        return new Promise(async (resolve, reject) => {
+            for (let i = 0; i < products; i++) {
+                await this.dbSqlite.db.run("INSERT INTO PRODUCT (id,name) VALUES("+i+", '"+products[i]+"')");
+            }
+            resolve();
+        })
+    }
+
+    async massInsertNeo4j(products){
+        let session = this.dbNeo4j.driver.session();
+        let nb_batchs=10;
+        let nb_transactions=10000/nb_batchs;
+        for (let i = 0; i < nb_batchs; i++) {
+            let txc=session.beginTransaction();
+            for (let j = nb_transactions*i; j < nb_transactions*(i+1); j++) {
+                await txc.run(
+                    'CREATE (p:Product {id: $id, name: $name})',{
+                        id: j,
+                        name:products[j]
+                    }
+                );
+            }
+            await txc.commit();
+        }
+        await session.close();
     }
 
     async create(id, name, strDb) {
-        if (strDb == null || strDb.toUpperCase() == "SQLITE") {
-            await this.createSqLite(id, name);
+        if(strDb.toUpperCase() == "SQLITE" || strDb == null){
+            await this.createSqlite(id,name);
         }
-        if (strDb == null || strDb.toUpperCase() == "NEO4J") {
-            await this.createNeo4j(id, name);
+        if(strDb.toUpperCase() == "NEO4J" || strDb == null){
+            await this.createNeo4j(id,name);
         }
     }
 
