@@ -1,4 +1,3 @@
-
 class User{
     constructor(dbSqlite, dbNeo4j) {
         this.dbSqlite = dbSqlite;
@@ -8,26 +7,60 @@ class User{
     async createSqLite(id, pseudo){
         this.dbSqlite.db.run("INSERT INTO USERS (id,pseudo) VALUES("+id+", '"+pseudo+"')");
     }
-    async createNeo4j(id,pseudo){
+
+    async createNeo4j(id, pseudo){
         let session = this.dbNeo4j.driver.session();
+        const txc=session.beginTransaction();
         try {
-            const result = await session.run(
-                'CREATE (a:Users {id: $id, pseudo: $pseudo}) RETURN a',
-                {   id: id,
-                    pseudo: pseudo}
+            await txc.run(
+                'CREATE (a:User {id: $id, pseudo: $pseudo}) RETURN a',
+                {
+                    id: id,
+                    pseudo: pseudo
+                }
             )
+            await txc.commit();
 
-            const singleRecord = result.records[0]
-            const node = singleRecord.get(0)
-
-            console.log(node.properties.pseudo)
-        } finally {
-            await session.close()
+        }catch (err){
+            console.error(err);
         }
-// on application exit:
-        await this.dbNeo4j.driver.close()
+        await session.close();
     }
 
+    async massInsertSqlite(users){
+        for (let i = 0; i < users.length; i++) {
+            await this.dbSqlite.db.run("INSERT INTO users (id,pseudo) VALUES("+i+", '"+users[i]+"')");
+        }
+    }
+
+    async massInsertNeo4j(users){
+        let time=Date.now()
+        let session = this.dbNeo4j.driver.session();
+        let size_batch=1000;
+        let nb_batchs=1000000/size_batch;
+        console.log("0 - 0s")
+        for (let i = 0; i < nb_batchs; i++) {
+            let txc=session.beginTransaction();
+            for (let j = size_batch*i; j < size_batch*(i+1); j++) {
+                let query="CREATE (u:User {id: "+j+", pseudo: '"+users[j].pseudo+"'})";
+                for (const follow of users[j].follows) {
+                    query+="\nWITH u" +
+                        "\nMATCH (f:User {id: "+follow+"})" +
+                        "\nCREATE (f)-[:Follow]->(u)"
+                }
+                for (const buy of users[j].buys) {
+                    query+="\nWITH u" +
+                        "\nMATCH (p:Product {id: "+buy+"})" +
+                        "\nCREATE (u)-[:Buy]->(p)"
+                }
+                await txc.run(query);
+            }
+            console.log(size_batch*(i+1)+" - "+(Date.now()-time).toFixed(3)/1000+"s")
+            time=Date.now();
+            await txc.commit();
+        }
+        await session.close();
+    }
 
     async create(id, pseudo, strDb) {
         if(strDb.toUpperCase() == "SQLITE" || strDb == null){
@@ -36,10 +69,6 @@ class User{
         if(strDb.toUpperCase() == "NEO4J" || strDb == null){
             await this.createNeo4j(id,pseudo);
         }
-    }
-
-    read(){
-
     }
 }
 

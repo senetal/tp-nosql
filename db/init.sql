@@ -1,12 +1,12 @@
 CREATE TABLE IF NOT EXISTS "USERS" (
 	"id"	INTEGER,
-	"pseudo"	VARCHAR(256) NOT NULL UNIQUE,
+	"pseudo"	VARCHAR(256) NOT NULL,
 	PRIMARY KEY("id")
 );
 
 CREATE TABLE IF NOT EXISTS "PRODUCT" (
 	"id"	INTEGER,
-	"name"	varchar(256) NOT NULL UNIQUE,
+	"name"	varchar(256) NOT NULL,
 	PRIMARY KEY("id")
 );
 
@@ -21,7 +21,6 @@ CREATE TABLE IF NOT EXISTS "FOLLOWS" (
 CREATE TABLE IF NOT EXISTS "BUY" (
     "user_id"	INTEGER,
     "product_id"	INTEGER,
-    "quantity"	INTEGER NOT NULL,
     PRIMARY KEY("user_id","product_id"),
     FOREIGN KEY("product_id") REFERENCES "PRODUCT"("id"),
     FOREIGN KEY("user_id") REFERENCES "USERS"("id")
