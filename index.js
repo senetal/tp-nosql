@@ -111,7 +111,7 @@ async function insertMassData(req,res){
     for (let i = minId; i < minId+1000000; i++) {
         users.push({pseudo:crypto.randomBytes(20).toString('hex'),buys:[],follows:[]});
         //followers
-        if (i>1000){
+        if (i>25){
             let followers = Math.min(Math.floor(Math.random()*21),users.length);
             for (let j = 0; j < followers; j++) {
                 let userid = Math.floor(Math.random()*users.length);

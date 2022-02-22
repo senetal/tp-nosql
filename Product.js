@@ -28,9 +28,12 @@ class Product {
     }
 
     async massInsertSqlite(products){
-        for (let i = 0; i < products; i++) {
-            await this.dbSqlite.db.run("INSERT INTO PRODUCT (id,name) VALUES("+i+", '"+products[i]+"')");
-        }
+        return new Promise(async (resolve, reject) => {
+            for (let i = 0; i < products; i++) {
+                await this.dbSqlite.db.run("INSERT INTO PRODUCT (id,name) VALUES("+i+", '"+products[i]+"')");
+            }
+            resolve();
+        })
     }
 
     async massInsertNeo4j(products){
