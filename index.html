@@ -5,6 +5,36 @@
     <title>TP NoSQL</title>
 </head>
 <body>
-Coucou
+<button id="massInsert">Insert mass data</button>
+<p>Time (s):</p>
+<textarea id="time" readonly></textarea>
+<script>
+    const sendXhr=function(url,callback){
+        const xhr=new XMLHttpRequest()
+        xhr.open("GET",url)
+        xhr.onreadystatechange=function (){
+            if(xhr.readyState==4){
+                res=JSON.parse(xhr.responseText)
+                callback(res);
+            }
+        }
+        console.log(url)
+        xhr.send()
+    }
+</script>
+<script>
+
+    const insertMassData=function (){
+        sendXhr("http://localhost:3000/insertmass",function(res){
+            let textarea = document.getElementById("time");
+            let txt="Generation:" + res.gen +
+                "\nInsert SQLite:" + res.sqlite +
+                "\nInsert Neo4j:" + res.neo4j;
+            textarea.innerText=txt;
+        })
+    }
+
+    document.getElementById("massInsert").onclick=insertMassData;
+</script>
 </body>
 </html>
