@@ -66,6 +66,28 @@ class AppDAO {
         }
         return time;
     }
+
+    async listProductButByFollowers(idUser, res){
+        await this.db.get("SELECT BUY.product_id, sum(quantity) \n" +
+            "FROM\n" +
+            "(WITH RECURSIVE\n" +
+            "  cnt(x,n) AS \n" +
+            "  (\n" +
+            "  VALUES(1,0)\n" +
+            "  UNION ALL\n" +
+            "  SELECT user1_id,  cnt.n +1\n" +
+            "  FROM cnt, FOLLOWS \n" +
+            "  WHERE cnt.x = FOLLOWS.user2_id\n" +
+            "  AND cnt.n < 5\n" +
+            "  )\n" +
+            "SELECT DISTINCT(x) FROM cnt WHERE x != 1\n" +
+            ")\n" +
+            "INNER JOIN BUY\n" +
+            "ON(x = user_id) \n" +
+            "GROUP BY(product_id);",(err,row)=>{
+            res.send(row);
+        });
+    }
 }
 
 module.exports = AppDAO;

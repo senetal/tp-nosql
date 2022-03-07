@@ -37,7 +37,7 @@ class Buy{
         for (let j=0;j<users.length;j++) {
             let buy=users[j].buys
             for (let i = 0; i < buy.length; i++) {
-                await this.dbSqlite.db.run("INSERT INTO BUY (user_id,product_id) VALUES("+buy[i]+", "+j+")");
+                await this.dbSqlite.db.run("INSERT INTO BUY (user_id,product_id) VALUES("+j+", "+buy[i]+")");
             }
         }
     }

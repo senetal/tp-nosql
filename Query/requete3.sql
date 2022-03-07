@@ -1,0 +1,18 @@
+SELECT n as niveau, count(x) as nbAchat
+FROM
+(WITH RECURSIVE
+  cnt(x,n,parent) AS
+  (
+  SELECT user_id, 0, '' FROM BUY WHERE BUY.product_id = {$idProduit}
+  UNION ALL
+  SELECT user1_id,  cnt.n +1, x
+  FROM cnt, FOLLOWS, BUY
+  WHERE cnt.x = FOLLOWS.user2_id
+  AND BUY.product_id = {$idProduit}
+  AND BUY.user_id = user1_id
+  AND user_id != parent
+  AND user2_id != parent
+  AND cnt.n < 5
+  )
+  select DISTINCT x, n from cnt)
+  group by niveau

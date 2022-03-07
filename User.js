@@ -28,9 +28,13 @@ class User{
     }
 
     async massInsertSqlite(users){
-        for (let i = 0; i < users.length; i++) {
-            await this.dbSqlite.db.run("INSERT INTO users (id,pseudo) VALUES("+i+", '"+users[i]+"')");
-        }
+        return new Promise(async (resolve, reject) => {
+            for (let i = 0; i < users.length; i++) {
+                console.log(users[i].pseudo);
+                await this.dbSqlite.db.run("INSERT INTO users (id,pseudo) VALUES("+i+", '"+users[i].pseudo+"')");
+            }
+            resolve();
+        })
     }
 
     async massInsertNeo4j(users){

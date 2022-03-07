@@ -29,7 +29,7 @@ class Product {
 
     async massInsertSqlite(products){
         return new Promise(async (resolve, reject) => {
-            for (let i = 0; i < products; i++) {
+            for (let i = 0; i < products.length; i++) {
                 await this.dbSqlite.db.run("INSERT INTO PRODUCT (id,name) VALUES("+i+", '"+products[i]+"')");
             }
             resolve();
@@ -43,6 +43,7 @@ class Product {
         for (let i = 0; i < nb_batchs; i++) {
             let txc=session.beginTransaction();
             for (let j = nb_transactions*i; j < nb_transactions*(i+1); j++) {
+                console.log(j)
                 await txc.run(
                     'CREATE (p:Product {id: $id, name: $name})',{
                         id: j,
